@@ -1,25 +1,16 @@
 {
   "name": "talentiq",
   "version": "1.0.0",
-  "lockfileVersion": 3,
-  "requires": true,
-  "packages": {
-    "": {
-      "name": "talentiq",
-      "version": "1.0.0",
-      "license": "ISC",
-      "dependencies": {
-        "helmet": "^8.1.0"
-      }
-    },
-    "node_modules/helmet": {
-      "version": "8.1.0",
-      "resolved": "https://registry.npmjs.org/helmet/-/helmet-8.1.0.tgz",
-      "integrity": "sha512-jOiHyAZsmnr8LqoPGmCjYAaiuWwjAPLgY8ZX2XrmHawt99/u1y6RgrZMTeoPfpUbV96HOalYgz1qzkRbw54Pmg==",
-      "license": "MIT",
-      "engines": {
-        "node": ">=18.0.0"
-      }
-    }
+  "main": "index.js",
+  "scripts": {
+    "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",
+    "start": "npm run start --prefix backend"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "helmet": "^8.1.0"
   }
 }
