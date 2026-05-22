@@ -3,7 +3,7 @@ import { requireAuth, getAuth } from "@clerk/express";
 import User from "../models/User.js";
 
 export const protectRoute = [
-  requireAuth({signInUrl: "/sign-in" }),
+  requireAuth({ signInUrl: "/sign-in" }),
 
   async (req, res, next) => {
     try {
@@ -12,7 +12,7 @@ export const protectRoute = [
 
       if (!clerkId) {
         return res.status(401).json({
-          msg: "Unauthorized",
+          message: "Unauthorized",
         });
       }
 
@@ -21,7 +21,7 @@ export const protectRoute = [
 
       if (!user) {
         return res.status(404).json({
-          msg: "User not found",
+          message: "User not found",
         });
       }
 
@@ -38,7 +38,7 @@ export const protectRoute = [
       );
 
       res.status(500).json({
-        msg: "Server error",
+        message: "Server error",
       });
     }
   },
