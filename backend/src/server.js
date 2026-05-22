@@ -2,10 +2,11 @@ import express from 'express'
 import path from 'path';
 import { ENV } from "./lib/env.js";
 import { connectDB } from './lib/db.js';
+// import cors from 'cors';
 
 const app=express();
 
-app.use(express.json());
+// app.use(express.json());
 
 const __dirname = path.resolve();
 
@@ -15,12 +16,17 @@ app.get("/health", (req, res) => {
 });
 
 
+// //middleware
+// app.use(express.json())
+
+// //credentials :true meaning server allow a browser to include cookies on requests
+// app.use(cors({origin:ENV.CLIENT_URL,credentials:true}))
 
 // make our app ready for deployment
 if (ENV.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
-  app.get("*", (req, res) => {
+  app.use((req, res) => {
     res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
   });
 }
