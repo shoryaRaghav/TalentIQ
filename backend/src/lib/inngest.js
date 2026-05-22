@@ -3,6 +3,8 @@ import { connectDB } from "./db.js";
 
 import User from "../models/User.js";
 
+import {upsertStreamUser, deleteStreamUser} from "./stream.js" ;
+
 export const inngest = new Inngest({
   id: "talent-iq",
 });
@@ -26,7 +28,7 @@ const syncUser = inngest.createFunction(
 
       const email = email_addresses?.[0]?.email_address;
 
-      // check if already exists
+      // check existing user
       const existingUser = await User.findOne({
         $or: [{ clerkId: id }, { email }],
       });
@@ -41,6 +43,13 @@ const syncUser = inngest.createFunction(
         email,
         name: `${first_name || ""} ${last_name || ""}`,
         profileImage: image_url,
+      });
+
+      // Stream user create
+      await upsertStreamUser({
+        id: newUser.clerkId.toString(),
+        name: newUser.name,
+        image: newUser.profileImage,
       });
 
       console.log("User created:", newUser);
@@ -89,16 +98,23 @@ const deleteUserFromDB = inngest.createFunction(
   { event: "clerk/user.deleted" },
 
   async ({ event }) => {
-    await connectDB();
+    try {
+      await connectDB();
 
-    const { id } = event.data;
+      const { id } = event.data;
 
-    await User.deleteOne({ clerkId: id });
+      await User.deleteOne({ clerkId: id });
 
-    return { success: true };
+      await deleteStreamUser(id.toString());
+
+      return { success: true };
+
+    } catch (error) {
+      console.log("DELETE USER ERROR:", error);
+      throw error;
+    }
   }
 );
-
 export const functions = [
   syncUser,
   updateUser,
