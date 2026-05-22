@@ -13,26 +13,44 @@ const syncUser = inngest.createFunction(
   { event: "clerk/user.created" },
 
   async ({ event }) => {
-    await connectDB();
+    try {
+      await connectDB();
 
-    const {
-      id,
-      email_addresses,
-      first_name,
-      last_name,
-      image_url,
-    } = event.data;
+      const {
+        id,
+        email_addresses,
+        first_name,
+        last_name,
+        image_url,
+      } = event.data;
 
-    const newUser = {
-      clerkId: id,
-      email: email_addresses[0]?.email_address,
-      name: `${first_name || ""} ${last_name || ""}`,
-      profileImage: image_url,
-    };
+      const email = email_addresses?.[0]?.email_address;
 
-    await User.create(newUser);
+      // check if already exists
+      const existingUser = await User.findOne({
+        $or: [{ clerkId: id }, { email }],
+      });
 
-    return { success: true };
+      if (existingUser) {
+        console.log("User already exists");
+        return { message: "User already exists" };
+      }
+
+      const newUser = await User.create({
+        clerkId: id,
+        email,
+        name: `${first_name || ""} ${last_name || ""}`,
+        profileImage: image_url,
+      });
+
+      console.log("User created:", newUser);
+
+      return { success: true };
+
+    } catch (error) {
+      console.log("SYNC USER ERROR:", error);
+      throw error;
+    }
   }
 );
 
