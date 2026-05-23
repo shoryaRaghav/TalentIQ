@@ -5,8 +5,7 @@ import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
 import DashboardPage from './pages/DashboardPage';
 import { Toaster } from 'react-hot-toast';
-
-
+import ProblemsPage from './pages/ProblemsPage';
 
 function App() {
 
@@ -22,6 +21,8 @@ function App() {
         <Route path="/dashboard" element={isSignedIn ? <DashboardPage /> : <Navigate to={"/"} />} />
 
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/problems" element={isSignedIn ? <ProblemsPage /> : <Navigate to={"/"} />} />
+
     </Routes>
     <Toaster/>
     </>
