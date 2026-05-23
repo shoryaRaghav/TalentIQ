@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import { StreamChat } from "stream-chat";
+import { StreamClient } from "@stream-io/node-sdk";
 
 dotenv.config();
 
@@ -11,6 +12,13 @@ if (!apiKey || !apiSecret) {
   process.exit(1);
 }
 
+// VIDEO CLIENT
+export const streamClient = new StreamClient(
+  apiKey,
+  apiSecret
+);
+
+// CHAT CLIENT
 export const chatClient = StreamChat.getInstance(
   apiKey,
   apiSecret
@@ -24,11 +32,10 @@ export const upsertStreamUser = async (userData) => {
       "Stream user upserted successfully:",
       userData
     );
-
   } catch (error) {
     console.error(
       "Error upserting Stream user:",
-      error
+      error.message
     );
   }
 };
@@ -41,25 +48,25 @@ export const deleteStreamUser = async (userId) => {
       "Stream user deleted successfully:",
       userId
     );
-
   } catch (error) {
     console.error(
       "Error deleting Stream user:",
-      error
+      error.message
     );
   }
 };
 
 export const generateStreamToken = (userId) => {
   try {
-
     if (!userId) {
       throw new Error("User ID is required");
     }
 
     const token = chatClient.createToken(userId);
 
-    console.log("Stream token generated successfully");
+    console.log(
+      "Stream token generated successfully"
+    );
 
     return token;
 
@@ -67,7 +74,7 @@ export const generateStreamToken = (userId) => {
 
     console.error(
       "Error generating Stream token:",
-      error
+      error.message
     );
 
     throw error;
