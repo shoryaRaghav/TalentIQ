@@ -29,10 +29,9 @@ app.use("/api/sessions",sessionRoutes);
 
 
 
-app.get("/health", (req, res) => {
+app.get("/api/health", (req, res) => {
   res.status(200).json({ msg: "api is up and running" });
 });
-
 
 //when you pass an array of middleware to Express,it automatically flattens and executes them sequentially , one by one
 app.get("/video-calls", protectRoute, (req, res) => {
