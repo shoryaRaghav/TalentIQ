@@ -10,7 +10,9 @@ import { clerkMiddleware } from '@clerk/express'
 import { protectRoute } from './middleware/protectRoute.js';
 import chatRoutes from './routes/chatRoutes.js';  
 import sessionRoutes from './routes/sessionRoutes.js';
-
+import uploadRoutes from "./routes/uploadRoutes.js";
+import { redisClient } from "./lib/redis.js";
+import cacheRoutes from "./routes/cacheRoutes.js";
 
 const app=express();
 const __dirname = path.resolve();
@@ -26,8 +28,8 @@ app.use(clerkMiddleware()) // this adds auth field to ququest
 app.use("/api/inngest", serve({client:inngest , functions}));
 app.use("/api/chat",chatRoutes);
 app.use("/api/sessions",sessionRoutes);
-
-
+app.use("/api/upload", uploadRoutes);
+app.use("/api/cache", cacheRoutes);
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({ msg: "api is up and running" });
@@ -63,6 +65,7 @@ if (ENV.NODE_ENV === "production") {
 const startServer=async()=>{
     try{
         await connectDB();
+        await redisClient.connect();
         app.listen(ENV.PORT,()=> console.log("Server is running on port:",ENV.PORT));
     }catch(error){
         console.log("Error starting the server");

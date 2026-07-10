@@ -1,5 +1,6 @@
 import Session from "../models/Session.js";
 import { chatClient ,streamClient} from "../lib/stream.js";
+import { redisClient } from "../lib/redis.js";
 
 export async function createSession(req,res){
     try{
@@ -23,6 +24,7 @@ export async function createSession(req,res){
             host:userId,
             callId
         })
+        await redisClient.del("active_sessions");
         
 
         await streamClient.video.call("default",callId).getOrCreate({
@@ -53,19 +55,44 @@ export async function createSession(req,res){
 
 }
 
-export async function getActiveSessions(_,res){
+export async function getActiveSessions(req, res) {
     try {
-        const sessions = await Session.find({ status: "active" })
-        .populate("host", "name profileImage email clerkId")
-        .populate("participant", "name profileImage email clerkId")
-        .sort({ createdAt: -1 })
-        .limit(20);
 
-        res.status(200).json({ sessions });
-  } catch (error) {
-    console.log("Error in getActiveSessions controller:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
+        const cacheKey = "active_sessions";
+
+        const cachedSessions = await redisClient.get(cacheKey);
+
+        if (cachedSessions) {
+            return res.status(200).json({
+                source: "Redis Cache",
+                sessions: JSON.parse(cachedSessions),
+            });
+        }
+
+        const sessions = await Session.find({ status: "active" })
+            .populate("host", "name profileImage email clerkId")
+            .populate("participant", "name profileImage email clerkId")
+            .sort({ createdAt: -1 })
+            .limit(20);
+
+        await redisClient.setEx(
+            cacheKey,
+            60,
+            JSON.stringify(sessions)
+        );
+
+        res.status(200).json({
+            source: "MongoDB",
+            sessions,
+        });
+
+    } catch (error) {
+        console.log("Error in getActiveSessions controller:", error.message);
+
+        res.status(500).json({
+            message: "Internal Server Error",
+        });
+    }
 }
 
 export async function getMyRecentSessions(req,res){
@@ -127,6 +154,7 @@ export async function joinSession(req,res){
 
         session.participant = userId;
         await session.save();
+        await redisClient.del("active_sessions");
 
         const channel = chatClient.channel("messaging", session.callId);
         await channel.addMembers([clerkId]);
@@ -167,6 +195,8 @@ export async function endSession(req,res){
 
         session.status = "completed";
         await session.save();
+
+        await redisClient.del("active_sessions");
 
         res.status(200).json({ session, message: "Session ended successfully" });
     } catch (error) {
